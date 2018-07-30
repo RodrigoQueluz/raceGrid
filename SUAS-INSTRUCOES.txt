@@ -1,0 +1,12 @@
+Para rodar o projeto é necessário ter a versão 8 do Java instalado no computador.
+
+Basta executar o arquivo "run.sh" presente na pasta do Projeto para o projeto executar.
+Ao fim da execução, o resultado poderá ser visível tanto na tela de comando que será executada quanto em um arquivo denominado "grid.txt" presente
+na pasta do projeto.
+
+O projeto pode ser rodado diretamente da linha de comando através do comando "./mvnw clean install exec:java" caso não tenha o Maven instalado
+localmente, ou simplesmente "mvn clean install exec:java" caso tenha instalado Maven e esteja presenta na variável Path de ambiente do Windows.
+
+Grato,
+
+Rodrigo Celestino Queluz

@@ -1,8 +1,11 @@
 package com.gympass;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DateFormat;
@@ -21,12 +24,14 @@ import com.gympass.model.Volta;
 
 public class RaceApplication {
 
+	private static final String LINE_DELIMINATOR = "------------------------------------------------------------------------------------------------------------------";
 	static List<ResultadoPiloto> grid = new ArrayList<ResultadoPiloto>();
 	static Date dataInicioCorrida = null;
 	static Date dataFimCorrida = null;
 	static Map<Integer, Double> temposCorrida = new HashMap<>();
 	static Volta melhorVoltaCorrida = new Volta();
-
+	static BufferedWriter fileWriter;
+	static PrintWriter writer;
 	public static void main(String[] args) {
 		List<String> list = new ArrayList<>();
 
@@ -34,10 +39,12 @@ public class RaceApplication {
 			list = br.lines().collect(Collectors.toList());
 			list = list.subList(1, list.size());
 
+			fileWriter = new BufferedWriter(new FileWriter("grid.txt"));
+			writer = new PrintWriter(fileWriter);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		
 		for (String voltaNaoFormatada : list) {
 			Volta volta = formataLinha(voltaNaoFormatada);
 			if (primeiraVolta()) {
@@ -61,10 +68,14 @@ public class RaceApplication {
 
 		ordenaGridPorVelocidadeMedia();
 
-		mostraResultado();
-		formataTempoTotalCorrida();
-		mostraMelhorVolta();
-
+		try {
+			mostraResultado();
+			formataTempoTotalCorrida();
+			mostraMelhorVolta();
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private static void ordenaGridPorVelocidadeMedia() {
@@ -76,12 +87,16 @@ public class RaceApplication {
 		});
 	}
 
-	private static void mostraMelhorVolta() {
+	private static void mostraMelhorVolta() throws IOException {
+		writer.println(LINE_DELIMINATOR);
 		System.out.println(
-				"------------------------------------------------------------------------------------------------------------------");
-		System.out.println("Melhor volta corrida: " + melhorVoltaCorrida);
+				LINE_DELIMINATOR);
+		String str = "Melhor volta corrida: " + melhorVoltaCorrida;
+		System.out.println(str);
+		writer.println(str);
 		System.out.println(
-				"------------------------------------------------------------------------------------------------------------------");
+				LINE_DELIMINATOR);
+		writer.println(LINE_DELIMINATOR);
 
 	}
 
@@ -93,30 +108,34 @@ public class RaceApplication {
 		return melhorVoltaCorrida.getTempoVolte().after(volta.getTempoVolte());
 	}
 
-	private static void mostraResultado() {
+	private static void mostraResultado() throws IOException {
 		System.out.println(
-				"------------------------------------------------------------------------------------------------------------------");
-
+				LINE_DELIMINATOR);
+		
+		writer.println(LINE_DELIMINATOR);
+		
 		Date diferencaResultado = null;
 		for (ResultadoPiloto resultadoPiloto : grid) {
 			DateFormat formatoVolta = new SimpleDateFormat("mm:ss.SSS");
 
-			if(diferencaResultado == null){
+			if (diferencaResultado == null) {
 				diferencaResultado = resultadoPiloto.getHoraUltimaVolta();
 			}
-			
+
 			Long diff = resultadoPiloto.getHoraUltimaVolta().getTime() - diferencaResultado.getTime();
 			long diffSeconds = diff / 1000 % 60;
 			long diffMinutes = diff / (60 * 1000) % 60;
-			double diffMiliseconds = BigDecimal.valueOf(diff / 1e6)
-					.setScale(3, RoundingMode.HALF_UP).doubleValue();
+			double diffMiliseconds = BigDecimal.valueOf(diff / 1e6).setScale(3, RoundingMode.HALF_UP).doubleValue();
 
-			System.out.println("Posicao Final: " + (grid.indexOf(resultadoPiloto) + 1) + " -> "
+			String str = "Posicao Final: " + (grid.indexOf(resultadoPiloto) + 1) + " -> "
 					+ padLeft(resultadoPiloto.getPiloto().toString()) + " " + resultadoPiloto.getNroVoltas()
 					+ " voltas completadas. Velocidade Media: " + resultadoPiloto.getVelocidadeMedia()
 					+ " . Melhor volta: " + resultadoPiloto.getMelhorVolta().getNroVolta() + " -> "
-					+ formatoVolta.format(resultadoPiloto.getMelhorVolta().getTempoVolte())
-					+ ". Diferenca: " + diffMinutes + " Minutos e " + diffSeconds + " Segundos e " + diffMiliseconds + " Milissegundos.") ;
+					+ formatoVolta.format(resultadoPiloto.getMelhorVolta().getTempoVolte()) + ". Diferenca: "
+					+ diffMinutes + " Minutos e " + diffSeconds + " Segundos e " + diffMiliseconds + " Milissegundos.";
+			writer.println(str);
+			System.out.println(str);
+			writer.println("---");
 			System.out.println("---");
 		}
 
@@ -149,7 +168,7 @@ public class RaceApplication {
 				resultado.setMelhorVolta(volta);
 			}
 		}
-		
+
 		resultado.setHoraUltimaVolta(volta.getHoraVolta());
 
 	}
@@ -165,15 +184,18 @@ public class RaceApplication {
 		return dataInicioCorrida == null;
 	}
 
-	private static void formataTempoTotalCorrida() {
+	private static void formataTempoTotalCorrida() throws IOException {
 		Long diff = dataFimCorrida.getTime() - dataInicioCorrida.getTime();
 		long diffSeconds = diff / 1000 % 60;
 		long diffMinutes = diff / (60 * 1000) % 60;
 		long diffHours = diff / (60 * 60 * 1000) % 24;
 		System.out.println(
-				"------------------------------------------------------------------------------------------------------------------");
-		System.out.println("Tempo Total Corrida: " + diffHours + " Horas, " + diffMinutes + " Minutos, " + diffSeconds
-				+ " Segundos.");
+				LINE_DELIMINATOR);
+		writer.println(LINE_DELIMINATOR);
+		String str = "Tempo Total Corrida: " + diffHours + " Horas, " + diffMinutes + " Minutos, " + diffSeconds
+				+ " Segundos.";
+		System.out.println(str);
+		writer.println(str);
 	}
 
 	public static Volta formataLinha(String v) {
